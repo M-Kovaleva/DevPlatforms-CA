@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { ResultSetHeader } from "mysql2";
 import { pool } from "../database.js";
 import { User, UserResponse } from "../interfaces.js";
+import { generateToken } from "../utils/jwt.js";
 
 const router = Router();
 
@@ -52,6 +53,53 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ error: "Failed to register user" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Searching for a user by email
+    const [rows] = await pool.execute(
+      "SELECT id, email, password_hash FROM users WHERE email = ?",
+      [email]
+    );
+    const users = rows as User[];
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: "Incorrect email or password" });
+    }
+
+    const user = users[0];
+
+    // Сверяем пароль с хешем
+    const validPassword = await bcrypt.compare(password, user.password_hash!);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: "Incorrect email or password" });
+    }
+
+    // Generating a JWT token
+    const token = generateToken(user.id);
+
+    const userResponse: UserResponse = {
+      id: user.id,
+      email: user.email,
+    };
+
+    res.json({
+      message: "Login successful",
+      user: userResponse,
+      token,
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Failed to log in" });
   }
 });
 
