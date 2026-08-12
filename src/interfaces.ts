@@ -5,6 +5,11 @@ export interface User {
   created_at: Date;
 }
 
+export interface UserResponse {
+  id: number;
+  email: string;
+}
+
 export interface Article {
   id: number;
   title: string;
