@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../database.js";
 import { User } from "../interfaces.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -14,6 +15,11 @@ router.get("/", async (req, res) => {
     console.error("Database query error:", error);
     res.status(500).json({ error: "Failed to fetch users" });
   }
+});
+
+// GET /users/me - secure test route: who am I??
+router.get("/me", authenticateToken, (req, res) => {
+  res.json({ message: "You are logged in!", userId: req.user!.id });
 });
 
 export default router;
