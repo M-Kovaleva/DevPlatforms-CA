@@ -1,4 +1,4 @@
-# News API
+# News platform
 
 A REST API built with Express and TypeScript for user registration/login and article submission, backed by MySQL. No frontend — interact via `curl`.
 
