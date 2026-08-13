@@ -4,23 +4,13 @@ import { ResultSetHeader } from "mysql2";
 import { pool } from "../database.js";
 import { User, UserResponse } from "../interfaces.js";
 import { generateToken } from "../utils/jwt.js";
+import { validateRegistration, validateLogin } from "../middleware/auth-validation.js";
 
 const router = Router();
 
-router.post("/register", async (req, res) => {
+router.post("/register", validateRegistration, async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    // Simple input validation
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
-    if (!email.includes("@")) {
-      return res.status(400).json({ error: "Incorrect email format" });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ error: "The password must be at least 6 characters long" });
-    }
 
     // Checking if an email is busy
     const [rows] = await pool.execute("SELECT id FROM users WHERE email = ?", [email]);
@@ -56,13 +46,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", validateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
 
     // Searching for a user by email
     const [rows] = await pool.execute(
