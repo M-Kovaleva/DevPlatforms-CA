@@ -1,6 +1,8 @@
 import { Router } from "express";
+import { ResultSetHeader } from "mysql2";
 import { pool } from "../database.js";
 import { Article } from "../interfaces.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -15,6 +17,41 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("Database query error:", error);
     res.status(500).json({ error: "Unable to retrieve articles" });
+  }
+});
+
+// POST /articles - secure route, only for logged in users
+router.post("/", authenticateToken, async (req, res) => {
+  try {
+    const { title, body, category } = req.body;
+
+    // Input data validation
+    if (!title || !body || !category) {
+      return res.status(400).json({ error: "title, body, and category are required" });
+    }
+
+    // req.user was introduced thanks to authenticateToken
+    const submittedBy = req.user!.id;
+
+    const [result] = await pool.execute(
+      "INSERT INTO articles (title, body, category, submitted_by) VALUES (?, ?, ?, ?)",
+      [title, body, category, submittedBy]
+    );
+    const insertResult = result as ResultSetHeader;
+
+    res.status(201).json({
+      message: "The article created",
+      article: {
+        id: insertResult.insertId,
+        title,
+        body,
+        category,
+        submitted_by: submittedBy,
+      },
+    });
+  } catch (error) {
+    console.error("Database query error:", error);
+    res.status(500).json({ error: "Failed to create article" });
   }
 });
 
