@@ -46,7 +46,13 @@ This creates the `news_db` database along with the `users` and `articles` tables
 
 ## Configuration
 
-Create a `.env` file in the project root with your own values:
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in `.env` with your own values:
 
 ```
 PORT=3000
@@ -185,4 +191,5 @@ src/
 └── index.ts                    # App entry point, middleware, routing
 database/
 └── schema.sql                  # Database schema (CREATE DATABASE/TABLE)
+└── news_db_export.sql          # Full export with sample data (users + articles)
 ```
